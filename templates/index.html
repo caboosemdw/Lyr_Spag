@@ -1,10 +1,9 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Spaghetti & Meatballs Guild Website</title>
-</head>
-<body>
+{% extends "base.html" %}
 
-</body>
-</html>
+{% block content %}
+<div class="container">
+    <h1>{{ title }}</h1>
+    <p>Founded: {{ founded }}</p>
+    <p>Guild Age: {{ age_days }} days</p>
+</div>
+{% endblock %}
