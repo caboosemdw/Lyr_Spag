@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>{{ title }}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+<!-- Navbar -->
+<nav class="navbar">
+  <ul>
+    <li><a href="{{ url_for('home') }}" class="{% if request.path == '/' %}active{% endif %}">Home</a></li>
+    <li><a href="{{ url_for('memberdata') }}" class="{% if request.path == '/memberdata' %}active{% endif %}">Member Data</a></li>
+    <li><a href="{{ url_for('gbosscalc') }}" class="{% if request.path == '/gbosscalc' %}active{% endif %}">Gboss Calc</a></li>
+  </ul>
+</nav>
+
+<!-- Main Page Content -->
+<div class="page-content">
+  {% block content %}{% endblock %}
+</div>
+</body>
+</html>

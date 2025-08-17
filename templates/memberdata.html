@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container guild-member-data">
+    <h2>Guild Members</h2>
+    {% if member_data %}
+    <table id="guildTable" data-sort-dir="asc">
+        <thead>
+        <tr>
+            <th onclick="sortTable(0)">Username ⬍</th>
+            <th onclick="sortTable(1)">Area ⬍</th>
+            <th onclick="sortTable(2)">Level ⬍</th>
+            <th onclick="sortTable(3)">Base Stats ⬍</th>
+        </tr>
+        </thead>
+        <tbody>
+            {% for member in member_data %}
+                <tr>
+                    <td>{{ member[0] }}</td>
+                    <td>{{ member[1] | format_number }}</td>
+                    <td>{{ member[2] | format_number }}</td>
+                    <td>{{ member[3] | format_number }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p>No member data available.</p>
+    {% endif %}
+</div>
+
+<script>
+    function sortTable(n) {
+        let table = document.getElementById("guildTable");
+        let rows = Array.from(table.rows).slice(1);
+        let asc = table.getAttribute("data-sort-dir") === "asc" ? false : true;
+
+        rows.sort((a, b) => {
+            let valA = a.cells[n].innerText.trim().replace(/,/g, "");
+            let valB = b.cells[n].innerText.trim().replace(/,/g, "");
+
+            if (!isNaN(valA) && !isNaN(valB)) {
+                return asc ? (parseFloat(valA) - parseFloat(valB))
+                           : (parseFloat(valB) - parseFloat(valA));
+            }
+            return asc ? valA.toLowerCase().localeCompare(valB.toLowerCase())
+                       : valB.toLowerCase().localeCompare(valA.toLowerCase());
+        });
+
+        rows.forEach(row => table.tBodies[0].appendChild(row));
+        table.setAttribute("data-sort-dir", asc ? "asc" : "desc");
+    }
+</script>
+{% endblock %}
