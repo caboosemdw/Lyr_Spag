@@ -1,8 +1,299 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="container">
-  <h2>Gboss Calc</h2>
-  <p>🚧 Under Construction 🚧</p>
+<div style="display: flex; gap: 20px; justify-content: center; align-items: flex-start;">
+
+  <!-- LEFT CONTAINER -->
+  <div class="container" style="flex: 1;">
+    <h2>Gboss Calc</h2>
+
+    <!-- Fighter input and buttons inline -->
+    <div style="margin: 15px 0; text-align: center;">
+      <input type="text" id="fighterInput" placeholder="Enter comma-separated usernames" style="width: 50%; padding: 5px;">
+      <button onclick="addFighters()" style="margin-left: 8px;">Add Users to Fight</button>
+      <button onclick="clearFighters()" style="margin-left: 5px;">Clear Fighters</button>
+    </div>
+
+    <table id="gbossTable" data-sort-dir="asc">
+      <thead>
+      <tr>
+        <th>Fighting</th>
+        <th>ID</th>
+        <th>Username</th>
+        <th>GBoss Dmg</th>
+        <th>GBoss Override</th>
+        <th>Catzord Equipped?</th>
+        <th>Update Override</th>
+      </tr>
+      </thead>
+      <tbody>
+      {% for member in members %}
+      <tr>
+        <td><input type="checkbox" class="fighter-checkbox" onchange="toggleFighter(this)"></td>
+        <td>{{ member.id }}</td>
+        <td>{{ member.username }}</td>
+        <td class="gboss-dmg" data-value="{{ member.gboss_dmg if member.gboss_dmg is not none else 0 }}">
+          {{ member.gboss_dmg | format_number if member.gboss_dmg is not none else "-" }}
+        </td>
+        <td class="gboss-override" data-value="{{ member.gboss_dmg_override if member.gboss_dmg_override is not none else 0 }}">
+          {{ member.gboss_dmg_override | format_number if member.gboss_dmg_override is not none else "-" }}
+        </td>
+        <td>
+          <input type="checkbox"
+                 class="catzord-checkbox"
+                 data-member-id="{{ member.id }}"
+                 {% if member.gboss_catzord %}checked{% endif %}>
+        </td>
+        <td>
+          <input type="number"
+                 class="override-input"
+                 data-member-id="{{ member.id }}"
+                 value=""
+                 placeholder="{{ member.gboss_dmg_override if member.gboss_dmg_override is not none else '' }}"
+                 style="width: 100px; text-align: right;">
+        </td>
+      </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- RIGHT CONTAINER -->
+  <div class="container" style="flex: 0.6; text-align: left;">
+    <h2>GBoss Stats</h2>
+    <p>
+      <strong>Event Boosts:</strong><br>
+      <label><input type="radio" name="eventBoost" value="inactive" checked> Inactive</label>
+      <label><input type="radio" name="eventBoost" value="active"> Active</label>
+    </p>
+    <p><strong>GBoss Health:</strong> <span id="gbossHealth">0</span></p>
+    <p><strong>GBoss Level:</strong> <span id="gbossLevel">0</span></p>
+    <p><strong>Plat Needed To Summon:</strong>
+      <span id="platValue" style="cursor: pointer; text-decoration: underline; color: #00aaff;">0</span>
+    </p>
+  </div>
 </div>
+
+<script>
+    // Add fighters by username list
+    function addFighters() {
+        let input = document.getElementById("fighterInput").value.trim();
+        if (!input) return;
+
+        let usernames = input.split(",").map(u => u.trim().toLowerCase());
+        let rows = document.querySelectorAll("#gbossTable tbody tr");
+
+        rows.forEach(row => {
+            let username = row.querySelector("td:nth-child(3)").innerText.trim().toLowerCase();
+            if (usernames.includes(username)) {
+                let checkbox = row.querySelector(".fighter-checkbox");
+                checkbox.checked = true;
+                toggleFighter(checkbox);
+            }
+        });
+
+        document.getElementById("fighterInput").value = "";
+    }
+
+    // Clear all fighters
+    function clearFighters() {
+        let checkboxes = document.querySelectorAll(".fighter-checkbox");
+        checkboxes.forEach(cb => {
+            cb.checked = false;
+            toggleFighter(cb);
+        });
+    }
+
+    // Handle fighter checkbox toggle
+    function toggleFighter(checkbox) {
+        let row = checkbox.closest("tr");
+
+        if (checkbox.checked) {
+            row.classList.add("fighter-highlight");
+        } else {
+            row.classList.remove("fighter-highlight");
+        }
+
+        updateStats(); // recalc stats when toggled
+    }
+
+    // Update GBoss stats
+    function updateStats() {
+        let rows = document.querySelectorAll("#gbossTable tbody tr");
+        let boostActive = document.querySelector("input[name='eventBoost'][value='active']").checked;
+        let totalHealth = 0n; // BigInt
+
+        rows.forEach(row => {
+            let checkbox = row.querySelector(".fighter-checkbox");
+            let isFighting = checkbox && checkbox.checked;
+            if (isFighting) {
+                let dmg = BigInt(row.querySelector(".gboss-dmg").dataset.value) || 0n;
+                let override = BigInt(row.querySelector(".gboss-override").dataset.value) || 0n;
+                let catzord = row.querySelector(".catzord-checkbox").checked;
+
+                let finalDmg = 0n;
+                if (!catzord) {
+                    if (override > 0n) {
+                        finalDmg = override * 1000000000000000000n; // quintillion multiplier
+                    } else {
+                        finalDmg = dmg * 1000000000000000000n;
+                    }
+                }
+                totalHealth += finalDmg;
+            }
+        });
+
+        if (boostActive) {
+            totalHealth = (totalHealth * 1055n) / 1000n; // +5.5% boost
+        }
+
+        // GBoss Level formula (BigInt)
+        let gbossLevel = ((Math.pow(Number(totalHealth), 5 / 11)) / Math.pow(7, 5 / 11));
+        let platNeeded = gbossLevel / 150;
+
+        // Format values
+        let healthQuint = totalHealth / 1000000000000000000n;
+        let healthDisplay = healthQuint.toLocaleString();
+        let levelDisplay = Math.round(gbossLevel).toLocaleString();
+        let platDisplay = Math.round(platNeeded).toLocaleString();
+
+        // Update DOM
+        document.getElementById("gbossHealth").innerText = healthDisplay + " Quintillion";
+        document.getElementById("gbossLevel").innerText = levelDisplay;
+        document.getElementById("platValue").innerText = platDisplay;
+        document.getElementById("platValue").dataset.raw = Math.round(platNeeded);
+
+        console.log("GBoss Debug →", { gbossLevel, platNeeded, levelDisplay, platDisplay });
+    }
+
+    // Sort table by override (desc), fallback dmg (desc)
+    function sortTable() {
+        let table = document.getElementById("gbossTable");
+        let rows = Array.from(table.rows).slice(1);
+
+        rows.sort((a, b) => {
+            let overrideA = parseInt(a.querySelector(".gboss-override").dataset.value) || 0;
+            let overrideB = parseInt(b.querySelector(".gboss-override").dataset.value) || 0;
+
+            let dmgA = parseInt(a.querySelector(".gboss-dmg").dataset.value) || 0;
+            let dmgB = parseInt(b.querySelector(".gboss-dmg").dataset.value) || 0;
+
+            if (overrideA !== overrideB) {
+                return overrideB - overrideA;
+            }
+            return dmgB - dmgA;
+        });
+
+        rows.forEach(row => table.tBodies[0].appendChild(row));
+    }
+
+    // ✅ Save single override on Enter
+    function applySingleOverride(input) {
+        let memberId = input.dataset.memberId;
+        let value = input.value.trim();
+
+        let formData = new FormData();
+        formData.append(`gboss_dmg_override_${memberId}`, value);
+
+        fetch("/update_gboss", {
+            method: "POST",
+            body: formData
+        })
+        .then(response => {
+            if (!response.ok) throw new Error("Failed to update override");
+            return response.text();
+        })
+        .then(() => {
+            let row = input.closest("tr");
+            let overrideCell = row.querySelector(".gboss-override");
+
+            if (value === "") {
+                // leave unchanged
+            } else if (value === "0") {
+                overrideCell.innerText = "-";
+                overrideCell.dataset.value = 0;
+                input.placeholder = "";
+            } else {
+                let num = parseInt(value);
+                overrideCell.innerText = num.toLocaleString();
+                overrideCell.dataset.value = num;
+                input.placeholder = num.toString();
+            }
+
+            input.value = ""; // clear entry
+            overrideCell.classList.add("flash-blue");
+            setTimeout(() => overrideCell.classList.remove("flash-blue"), 1000);
+
+            updateStats();
+        })
+        .catch(err => {
+            console.error("Error updating override:", err);
+            input.style.border = "2px solid red";
+            setTimeout(() => input.style.border = "", 2000);
+        });
+    }
+
+    // ✅ Save Catzord on toggle
+    function updateCatzord(checkbox) {
+        let memberId = checkbox.dataset.memberId;
+        let checked = checkbox.checked ? "on" : "";
+
+        let formData = new FormData();
+        formData.append(`gboss_catzord_${memberId}`, checked);
+
+        fetch("/update_gboss", {
+            method: "POST",
+            body: formData
+        })
+        .then(response => {
+            if (!response.ok) throw new Error("Failed to update catzord");
+            return response.text();
+        })
+        .then(() => {
+            let row = checkbox.closest("tr");
+            row.classList.add("flash-blue");
+            setTimeout(() => row.classList.remove("flash-blue"), 1000);
+
+            updateStats();
+        })
+        .catch(err => {
+            console.error("Error updating catzord:", err);
+            checkbox.style.outline = "2px solid red";
+            setTimeout(() => checkbox.style.outline = "", 2000);
+        });
+    }
+
+    // Attach listeners
+    document.addEventListener("DOMContentLoaded", () => {
+        sortTable();
+
+        document.querySelectorAll(".override-input").forEach(input => {
+            input.addEventListener("keydown", (e) => {
+                if (e.key === "Enter") {
+                    applySingleOverride(input);
+                }
+            });
+        });
+
+        document.querySelectorAll(".catzord-checkbox").forEach(cb => {
+            cb.addEventListener("change", () => updateCatzord(cb));
+        });
+
+        document.querySelectorAll("input[name='eventBoost']").forEach(rb => {
+            rb.addEventListener("change", updateStats);
+        });
+
+    });
+</script>
+
+<style>
+/* Smurf blue highlight for fighters */
+.fighter-highlight {
+    background-color: rgba(136, 204, 255, 0.8) !important;
+}
+.flash-blue {
+    background-color: rgba(0, 170, 255, 0.3) !important;
+    transition: background-color 1s ease;
+}
+</style>
 {% endblock %}

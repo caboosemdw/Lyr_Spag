@@ -3,25 +3,32 @@
 {% block content %}
 <div class="container guild-member-data">
     <h2>Guild Members</h2>
+    {% if last_updated_str and updated_from %}
+    <p style="font-size: 0.9rem; color: #aaa;">
+        {{ updated_from }} Last Updated: {{ last_updated_str }}
+    </p>
+    {% endif %}
     {% if member_data %}
     <table id="guildTable" data-sort-dir="asc">
         <thead>
         <tr>
             <th onclick="sortTable(0)">Username ⬍</th>
-            <th onclick="sortTable(1)">Area ⬍</th>
-            <th onclick="sortTable(2)">Level ⬍</th>
-            <th onclick="sortTable(3)">Base Stats ⬍</th>
+            <th onclick="sortTable(1)">ID ⬍</th> <!-- ✅ new column -->
+            <th onclick="sortTable(2)">Area ⬍</th>
+            <th onclick="sortTable(3)">Level ⬍</th>
+            <th onclick="sortTable(4)">Base Stats ⬍</th>
         </tr>
         </thead>
         <tbody>
-            {% for member in member_data %}
-                <tr>
-                    <td>{{ member[0] }}</td>
-                    <td>{{ member[1] | format_number }}</td>
-                    <td>{{ member[2] | format_number }}</td>
-                    <td>{{ member[3] | format_number }}</td>
-                </tr>
-            {% endfor %}
+        {% for member in member_data %}
+        <tr>
+            <td>{{ member[0] }}</td>
+            <td>{{ member[1] }}</td> <!-- raw ID, no commas -->
+            <td>{{ member[2] | format_number }}</td>
+            <td>{{ member[3] | format_number }}</td>
+            <td>{{ member[4] | format_number }}</td>
+        </tr>
+        {% endfor %}
         </tbody>
     </table>
     {% else %}

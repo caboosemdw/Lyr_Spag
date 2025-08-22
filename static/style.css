@@ -44,6 +44,7 @@ body {
     color: #00aaff;
 }
 
+/* Active navbar link */
 .navbar ul li a.active {
     color: #00aaff;
     border-bottom: 2px solid #00aaff;
@@ -55,13 +56,12 @@ body {
 }
 
 .container {
-    text-align: center;  /* centers the text inside */
+    text-align: center;
     background: rgba(255, 255, 255, 0.05);
     padding: 30px 50px;
     border-radius: 12px;
     box-shadow: 0 8px 20px rgba(0, 0, 0, 0.6);
-    text-align: center;
-    margin: 20px auto;   /* centers the container */
+    margin: 20px auto;
     width: 80%;
     max-width: 800px;
 }
@@ -87,7 +87,7 @@ th {
     background: rgba(255, 255, 255, 0.1);
     font-weight: bold;
     color: #f1f1f1;
-    cursor: pointer; /* Make it look clickable */
+    cursor: pointer;
     user-select: none;
 }
 
@@ -97,7 +97,7 @@ th:hover {
 
 /* Table headers - distinct background */
 .guild-member-data table thead th {
-    background-color: rgba(0, 123, 255, 0.4); /* blue tint for contrast */
+    background-color: rgba(0, 123, 255, 0.4);
     font-weight: bold;
     color: #ffffff;
     cursor: pointer;
@@ -125,8 +125,21 @@ th:hover {
     padding-left: 12px;
 }
 
-/* Keep other columns centered */
-.guild-member-data table td:not(:first-child),
-.guild-member-data table th:not(:first-child) {
+/* Center-align ID column (fixed width, no wrapping) */
+.guild-member-data table td:nth-child(2),
+.guild-member-data table th:nth-child(2) {
     text-align: center;
+    white-space: nowrap; /* ✅ prevent line breaks */
+    min-width: 80px;     /* ✅ keep readable width */
+}
+
+/* Keep other numeric columns centered */
+.guild-member-data table td:not(:first-child):not(:nth-child(2)),
+.guild-member-data table th:not(:first-child):not(:nth-child(2)) {
+    text-align: center;
+}
+
+#gbossTable th {
+    cursor: default; /* no longer clickable */
+    user-select: none;
 }

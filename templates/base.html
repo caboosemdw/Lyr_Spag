@@ -9,9 +9,9 @@
 <!-- Navbar -->
 <nav class="navbar">
   <ul>
-    <li><a href="{{ url_for('home') }}" class="{% if request.path == '/' %}active{% endif %}">Home</a></li>
-    <li><a href="{{ url_for('memberdata') }}" class="{% if request.path == '/memberdata' %}active{% endif %}">Member Data</a></li>
-    <li><a href="{{ url_for('gbosscalc') }}" class="{% if request.path == '/gbosscalc' %}active{% endif %}">Gboss Calc</a></li>
+    <li><a href="{{ url_for('home') }}" class="{% if request.endpoint == 'home' %}active{% endif %}">Home</a></li>
+    <li><a href="{{ url_for('memberdata') }}" class="{% if request.endpoint == 'memberdata' %}active{% endif %}">Member Data</a></li>
+    <li><a href="{{ url_for('gbosscalc') }}" class="{% if request.endpoint == 'gbosscalc' %}active{% endif %}">Gboss Calc</a></li>
   </ul>
 </nav>
 
